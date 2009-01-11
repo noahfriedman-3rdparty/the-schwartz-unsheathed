@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_height="fill_parent"
+android:layout_width="fill_parent"
+android:background="#444460"
+android:orientation="vertical">
+<TextView
+android:id="@+id/accellX"
+android:text="AccelX: "
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="28sp"
+android:textColor="#ffffff"/>
+<TextView
+android:id="@+id/accellY"
+android:text="AccelY: "
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="28sp"
+android:textColor="#ffffff"/>
+<TextView
+android:id="@+id/accellZ"
+android:text="AccelZ: "
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="28sp"
+android:textColor="#ffffff"/>
+<Button
+android:id="@+id/buttonQuit"
+android:text="   Quit   "
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="18sp" android:capitalize="words"/>
+</LinearLayout>
