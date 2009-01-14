@@ -21,9 +21,12 @@
 package com.android.app.schwarz;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.view.*;
 import android.hardware.SensorManager;
 
