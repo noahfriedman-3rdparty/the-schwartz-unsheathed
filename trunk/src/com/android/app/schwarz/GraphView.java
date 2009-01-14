@@ -36,6 +36,9 @@ import android.hardware.SensorManager;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
+
 import java.lang.Math;
 import java.util.Vector;
 
@@ -48,11 +51,12 @@ public class GraphView extends View implements Runnable
 	public static final String APP_NAME = "TheSchwartz";
 	
     public static final int SWING_DELAY = 500;
-    public int HIT_DELAY = 10;
+    public int HIT_DELAY = 250;
     public static final int MAX_COLORS = 8;
     public static final int NUM_SAMPLES = 2;
     public static final float ACCEL_THRESHOLD = 0.6f;
-    public static final float HIT_FORCE = 6.0f;//SensorManager.GRAVITY_EARTH;
+    public static final float SWING_FORCE = 3.0f;
+    public static final float HIT_FORCE = 10.0f;//SensorManager.GRAVITY_EARTH;
     
     public static final int SND_SABROUT1 = 0;
     public static final int SND_SABROFF1 = 1;
@@ -72,7 +76,7 @@ public class GraphView extends View implements Runnable
     public static final int SWING_DETECTED = 1;
     public static final int HIT_DETECTED = 2;
     public static final int NO_MOVEMENT = 3;
-    public static final float PI_OVER_180 = 0.017453293f;
+    public static final float PI_OVER_180 = (float)(Math.PI / 180.0);
     
     private Bitmap  mBitmap;
     private Bitmap  mSabre;
@@ -101,6 +105,8 @@ public class GraphView extends View implements Runnable
     private boolean mBgVisible = true;
     private boolean mPlayHum = true;
     private boolean mSensitive = false;
+    private float 	mGravity[] = new float[] {0.0f, 0.0f};
+    private WakeLock mWakeLock = null;
     
     public GraphView(Context context, SensorManager sm) {
         super(context);
@@ -111,6 +117,8 @@ public class GraphView extends View implements Runnable
 //        mSabre = BitmapFactory.decodeResource(getResources(), R.drawable.ring_hilt);
         mStarField = BitmapFactory.decodeResource(getResources(), R.drawable.background);
         mSensorManager = (SensorManager)sm;
+//        final PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE); 
+//        this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TheSchwartz");
 
         Thread thread = new Thread(this);
         thread.start();
@@ -204,7 +212,7 @@ public class GraphView extends View implements Runnable
     			this.setSabreOut(true);
 
     			int mask = 0;
-    			mask = SensorManager.SENSOR_ACCELEROMETER;// | SensorManager.SENSOR_ORIENTATION;
+    			mask = SensorManager.SENSOR_ACCELEROMETER | SensorManager.SENSOR_ORIENTATION;
 
     			mSensorManager.registerListener(mListener, mask, SensorManager.SENSOR_DELAY_FASTEST);
     			mForceActive = true;
@@ -255,14 +263,32 @@ public class GraphView extends View implements Runnable
     private final SensorListener mListener = new SensorListener() {
         public void onSensorChanged(int sensor, float[] values) {
         	if(sensor != SensorManager.SENSOR_ACCELEROMETER) {
+        		float roll = values[2] * PI_OVER_180;
+        		float pitch = values[1] * PI_OVER_180;
+        		
+        		mGravity[0] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(roll));
+        		mGravity[1] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(pitch));
         	}
         	else {
         		long currTime = System.currentTimeMillis();
-        		float magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]+values[2]*values[2]);
+        		values[0] += mGravity[0];
+        		values[1] += mGravity[1];
+        		float magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]);//+values[2]*values[2]);
 //        		Log.i(APP_NAME, deltaT + ": ["+values[0]+", "+values[1]+", "+values[2]+", "+magnitude+"]");
 //        		lastTime = currTime;
-
-        		int movement = updateAccelReadings(magnitude);
+        		int movement = NO_MOVEMENT;
+        		if(mSensitive) {
+        			if(magnitude >= HIT_FORCE)
+        				movement = HIT_DETECTED;
+        			else if(magnitude >= SWING_FORCE)
+        				movement = SWING_DETECTED;
+        		} else {
+        			if(magnitude >= HIT_FORCE*2.0)
+        				movement = HIT_DETECTED;
+        			else if(magnitude >= SWING_FORCE*2.0)
+        				movement = SWING_DETECTED;
+        		}
+//        		int movement = updateAccelReadings(magnitude);
 //        		switch(movement) {
 //        		case SWING_DETECTED:
 //        			Log.i(APP_NAME, "Movement detected in samples.");
@@ -278,8 +304,7 @@ public class GraphView extends View implements Runnable
 //        			break;
 //        		}
 	
-        		if(movement == HIT_DETECTED ) {//&& (currTime - lastTime >= HIT_DELAY)) {
-       				HIT_DELAY = 15;
+        		if(movement == HIT_DETECTED && (currTime - lastTime >= HIT_DELAY)) {
         			mClash = true;
         			if(mMP.isPlaying() == true) {
        					mMP.stop();
@@ -325,7 +350,7 @@ public class GraphView extends View implements Runnable
         					// TODO Auto-generated catch block
         					e.printStackTrace();
         				}
-        				if(HIT_DELAY <= 10) {
+//        				if(HIT_DELAY <= 10) {
         					mMP.release();
 
         					Random rand = new Random();
@@ -344,11 +369,11 @@ public class GraphView extends View implements Runnable
        						mHumming = false;
        						mGlowLevel = 0xFF;
        						mGlowInc = -2;
-        				}
+//        				}
    						lastTime = currTime;
-   	      				HIT_DELAY = 10;
+//   	      				HIT_DELAY = 10;
         			}
-        		} else if(false == mHumming && (currTime-lastTime > SWING_DELAY) ) {
+        		} else if(false == mHumming) {// && (currTime-lastTime > SWING_DELAY) ) {
         			if(false == mMP.isPlaying()) {
         				try {
         					mMP.prepare();
@@ -541,6 +566,7 @@ public class GraphView extends View implements Runnable
         GradientDrawable background = null;
         GradientDrawable blade = null;
         
+//        mWakeLock.acquire();
         if(false == mZoom)
         {
         	if(mBgVisible)
@@ -722,10 +748,11 @@ public class GraphView extends View implements Runnable
     		background.draw(canvas);
     		back2.draw(canvas);
         }
-		if(mClash && mGlowLevel > 0xD0) {
+		if(mZoom && mClash && mGlowLevel > 0xD0) {
 			mPaint.setColor(0x00FFFFFF + (mGlowLevel<<24));
 			canvas.drawRect(0, 0, mWidth, mHeight, mPaint);
 		}
+//		mWakeLock.release();
     }
 }
 
