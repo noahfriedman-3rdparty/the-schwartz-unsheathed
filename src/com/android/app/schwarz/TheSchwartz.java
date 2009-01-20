@@ -97,12 +97,12 @@ public class TheSchwartz extends Activity {
 		// id -- Used only when you want to handle and identify the click yourself.
 		// title
 		mMenu = menu;
-		mMenu.add(0, 0, 0, "Zoom In/Out");
-		mMenu.add(1, 1, 0, "Toggle BG");
+		mMenu.add(0, 0, 0, R.string.zoom_toggle);
+		mMenu.add(1, 1, 0, R.string.bg_toggle);
 		if(false == mSensitive)
-			mMenu.add(1, 2, 1, "High Sensitivity");
+			mMenu.add(1, 2, 1, R.string.high_sensitivity);
 		else
-			mMenu.add(1, 2, 1, "Low Sensitivity");
+			mMenu.add(1, 2, 1, R.string.low_sensitivity);
 //		menu.add(1, 2, 1, "Toggle Hum");
 		return true;
 	}
@@ -127,9 +127,9 @@ public class TheSchwartz extends Activity {
 			mSensitive = mGraphView.getSensitivity();
 			
 			if(false == mSensitive)
-				mMenu.add(1, 2, 1, "High Sensitivity");
+				mMenu.add(1, 2, 1, R.string.high_sensitivity);
 			else
-				mMenu.add(1, 2, 1, "Low Sensitivity");
+				mMenu.add(1, 2, 1, R.string.low_sensitivity);
 			
 			return true;
 		}

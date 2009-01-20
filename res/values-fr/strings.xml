@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <string name="app_name">The Schwartz Unsheathed</string>
+<string name="high_sensitivity">Sensibilité élevée</string>
+<string name="low_sensitivity">Sensibilité basse</string>
+<string name="zoom_toggle">Bourdonnez Dedans/Dehors</string>
+<string name="bg_toggle">Fond à Bascule</string>
+</resources>

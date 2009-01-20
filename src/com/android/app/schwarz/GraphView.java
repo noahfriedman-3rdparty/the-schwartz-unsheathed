@@ -107,6 +107,7 @@ public class GraphView extends View implements Runnable
     private boolean mSensitive = false;
     private float 	mGravity[] = new float[] {0.0f, 0.0f};
     private WakeLock mWakeLock = null;
+    private int mOrientation = PhoneOrientation.ORIENTATION_INVALID;
     private PhoneOrientation mPO = new PhoneOrientation();
     
     public GraphView(Context context, SensorManager sm) {
@@ -213,7 +214,7 @@ public class GraphView extends View implements Runnable
     			this.setSabreOut(true);
 
     			int mask = 0;
-    			mask = SensorManager.SENSOR_ACCELEROMETER;// | SensorManager.SENSOR_ORIENTATION;
+    			mask = SensorManager.SENSOR_ACCELEROMETER | SensorManager.SENSOR_ORIENTATION;
 
     			mSensorManager.registerListener(mListener, mask, SensorManager.SENSOR_DELAY_FASTEST);
     			mForceActive = true;
@@ -264,17 +265,23 @@ public class GraphView extends View implements Runnable
     private final SensorListener mListener = new SensorListener() {
         public void onSensorChanged(int sensor, float[] values) {
         	if(sensor == SensorManager.SENSOR_ORIENTATION) {
-        		float roll = values[2] * PI_OVER_180;
-        		float pitch = values[1] * PI_OVER_180;
-        		
-        		mGravity[0] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(roll));
-        		mGravity[1] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(pitch));
+//        		float roll = values[2] * PI_OVER_180;
+//        		float pitch = values[1] * PI_OVER_180;
+        		mOrientation = mPO.getOrientation(values[2], values[1]);
+//        		mGravity[0] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(roll));
+//        		mGravity[1] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(pitch));
         	}
         	else {
         		long currTime = System.currentTimeMillis();
 //        		values[0] += mGravity[0];
 //        		values[1] += mGravity[1];
-        		float magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]+values[2]*values[2]);
+        		float magnitude = 0.0f;
+        		if(mOrientation == PhoneOrientation.ORIENTATION_FACE_UP || mOrientation == PhoneOrientation.ORIENTATION_FACE_DOWN)
+        			magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]);
+        		else if(mOrientation == PhoneOrientation.ORIENTATION_FACE_LEFT || mOrientation == PhoneOrientation.ORIENTATION_FACE_RIGHT)
+        			magnitude = (float)Math.sqrt(values[2]*values[2]+values[1]*values[1]);
+        		else if(mOrientation == PhoneOrientation.ORIENTATION_FACE_FORWARD || mOrientation == PhoneOrientation.ORIENTATION_FACE_BACKWARD)
+        			magnitude = (float)Math.sqrt(values[0]*values[0]+values[2]*values[2]);
 //        		Log.i(APP_NAME, deltaT + ": ["+values[0]+", "+values[1]+", "+values[2]+", "+magnitude+"]");
 //        		lastTime = currTime;
         		int movement = NO_MOVEMENT;
