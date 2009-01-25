@@ -29,6 +29,13 @@ import android.graphics.drawable.*;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.ListView;
+import android.widget.PopupWindow;
+import android.widget.Toast;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+
 import java.io.IOException;
 import java.util.Random;
 import android.hardware.SensorListener;
@@ -109,6 +116,7 @@ public class GraphView extends View implements Runnable
     private WakeLock mWakeLock = null;
     private int mOrientation = PhoneOrientation.ORIENTATION_INVALID;
     private PhoneOrientation mPO = new PhoneOrientation();
+    private boolean mKeepScreenOn = false;
     
     public GraphView(Context context, SensorManager sm) {
         super(context);
@@ -121,7 +129,9 @@ public class GraphView extends View implements Runnable
         mSensorManager = (SensorManager)sm;
         final PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE); 
         this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TheSchwartz");
-
+        mWakeLock.acquire();
+        mKeepScreenOn = this.getKeepScreenOn();
+        this.setKeepScreenOn(true);
         Thread thread = new Thread(this);
         thread.start();
     }
@@ -182,6 +192,10 @@ public class GraphView extends View implements Runnable
     public boolean getSensitivity() {
     	return mSensitive;
     }
+    
+    public boolean getSabreOut() {
+    	return mSabreOut;
+    }
 
     @Override
 	public boolean onTouchEvent(MotionEvent event) {
@@ -226,7 +240,7 @@ public class GraphView extends View implements Runnable
 
     			mSensorManager.unregisterListener(mListener);
     			mForceActive = false;
-    			mHumming = false;
+	mHumming = false;
     		}
     	} else if(true == mForceActive) {
     		mColorNum++;
@@ -260,6 +274,9 @@ public class GraphView extends View implements Runnable
     	
     	// last unregister the sensor listener.
     	mSensorManager.unregisterListener(mListener);
+    	
+    	mWakeLock.release();
+    	this.setKeepScreenOn(mKeepScreenOn);
     }
  
     private final SensorListener mListener = new SensorListener() {
@@ -573,8 +590,7 @@ public class GraphView extends View implements Runnable
    private void drawSabre(Canvas canvas, boolean zoomed) {
         GradientDrawable background = null;
         GradientDrawable blade = null;
-        
-        mWakeLock.acquire();
+
         if(false == mZoom)
         {
         	if(mBgVisible)
@@ -760,7 +776,6 @@ public class GraphView extends View implements Runnable
 			mPaint.setColor(0x00FFFFFF + (mGlowLevel<<24));
 			canvas.drawRect(0, 0, mWidth, mHeight, mPaint);
 		}
-		mWakeLock.release();
     }
 }
 

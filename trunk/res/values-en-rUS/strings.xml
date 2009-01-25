@@ -6,4 +6,8 @@
 <string name="low_sensitivity">Low Sensitivity</string>
 <string name="zoom_toggle">Zoom In/Out</string>
 <string name="bg_toggle">Toggle BG</string>
+<string name="sabre_out_warning">The sabre must be out in order to use this feature.</string>
+<string name="high_active">High sensitivity set</string>
+<string name="low_active">Low sensitivity set</string>
+<string name="schwartz">May the Schwartz be with you!</string>
 </resources>

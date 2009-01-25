@@ -6,4 +6,9 @@
 <string name="low_sensitivity">Niedrige Empfindlichkeit</string>
 <string name="zoom_toggle">Zoom In/Aus</string>
 <string name="bg_toggle">Toggle Hintergrund</string>
+<string name="sabre_out_warning">Der Säbel muss heraus sein, diese Funktion zu benutzen.</string>
+
+<string name="high_active">Hoher Empfindlichkeitssatz</string>
+<string name="low_active">Niedriger Empfindlichkeitssatz</string>
+<string name="schwartz">Mai ist das Schwartz mit Ihnen!</string>
 </resources>
