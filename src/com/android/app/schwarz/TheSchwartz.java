@@ -21,13 +21,11 @@
 package com.android.app.schwarz;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.PowerManager;
-import android.os.PowerManager.WakeLock;
 import android.view.*;
+import android.widget.Toast;
 import android.hardware.SensorManager;
 
 public class TheSchwartz extends Activity {
@@ -37,6 +35,7 @@ public class TheSchwartz extends Activity {
 	private GraphView mGraphView;
 	private Menu mMenu;
 	private boolean mSensitive = false;
+	private boolean mFirstRun = true;
 
 	/** Called when the activity is first created. */
     @Override
@@ -55,6 +54,7 @@ public class TheSchwartz extends Activity {
         int color = settings.getInt("sabreColor", 0);
         boolean bgVisible = settings.getBoolean("bgVisible", true);
         mSensitive = settings.getBoolean("sensitive", false);
+        mFirstRun = settings.getBoolean("firstRun", true);
         mGraphView.setSabreColor(color);
         mGraphView.setBgVisible(bgVisible);
         mGraphView.setSensitivity(mSensitive);
@@ -64,6 +64,10 @@ public class TheSchwartz extends Activity {
     protected void onStart() {
     	super.onStart();
     	mGraphView.invalidate();
+    	if(true == mFirstRun) {
+    		Toast.makeText(this,R.string.schwartz, Toast.LENGTH_SHORT).show();
+    		mFirstRun = false;
+    	}
     }
 
     @Override
@@ -76,6 +80,7 @@ public class TheSchwartz extends Activity {
     	editor.putInt("sabreColor", mGraphView.getSabreColor());
     	editor.putBoolean("bgVisible", mGraphView.getBgVisible());
     	editor.putBoolean("sensitive", mGraphView.getSensitivity());
+    	editor.putBoolean("firstRun", mFirstRun);
     	// Don't forget to commit your edits!!!
     	editor.commit();
     	mGraphView.onStop();
@@ -115,7 +120,13 @@ public class TheSchwartz extends Activity {
 	public boolean onOptionsItemSelected(MenuItem item){
 		switch (item.getItemId()) {
 		case 0:
-			mGraphView.toggleZoom();
+			if(false == mGraphView.getSabreOut()) {
+				Toast.makeText(this, R.string.sabre_out_warning, Toast.LENGTH_SHORT).show();
+//				new AlertDialog.Builder(this)
+//                .setMessage(R.string.sabre_out_warning)
+//                .show();
+			} else
+				mGraphView.toggleZoom();
 			return true;
 		case 1:
 			mGraphView.toggleBackground();
@@ -126,11 +137,14 @@ public class TheSchwartz extends Activity {
 			mGraphView.toggleSensitivity();
 			mSensitive = mGraphView.getSensitivity();
 			
-			if(false == mSensitive)
+			if(false == mSensitive) {
 				mMenu.add(1, 2, 1, R.string.high_sensitivity);
-			else
+				Toast.makeText(this, R.string.low_active, Toast.LENGTH_SHORT).show();
+			}
+			else {
 				mMenu.add(1, 2, 1, R.string.low_sensitivity);
-			
+				Toast.makeText(this, R.string.high_active, Toast.LENGTH_SHORT).show();
+			}
 			return true;
 		}
 		return false;

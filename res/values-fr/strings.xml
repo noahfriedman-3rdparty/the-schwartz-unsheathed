@@ -6,4 +6,8 @@
 <string name="low_sensitivity">Sensibilité basse</string>
 <string name="zoom_toggle">Bourdonnez Dedans/Dehors</string>
 <string name="bg_toggle">Fond à Bascule</string>
+<string name="sabre_out_warning">Le sabre doit être dehors pour employer ce dispositif.</string>
+<string name="low_active">Bas ensemble de sensibilité</string>
+<string name="high_active">Ensemble élevé de sensibilité</string>
+<string name="schwartz">Mai le Schwartz soit avec vous !</string>
 </resources>
