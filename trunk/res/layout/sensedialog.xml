@@ -3,12 +3,28 @@
 xmlns:android="http://schemas.android.com/apk/res/android"
 android:layout_height="fill_parent"
 android:layout_width="fill_parent"
-android:background="#444460"
+android:background="#00444460"
 android:orientation="vertical">
 <SeekBar
 android:id="@+id/sensitivity"
 android:layout_height="wrap_content"
 android:layout_width="fill_parent"
 android:background="#80FFFFFF"
-android:scrollbarAlwaysDrawHorizontalTrack="true" android:clickable="true" android:max="15"/>
+android:scrollbarAlwaysDrawHorizontalTrack="true" android:clickable="true" android:max="15" android:scrollbarStyle="outsideOverlay"/>
+<TableLayout
+ xmlns:android="http://schemas.android.com/apk/res/android"
+ android:layout_height="wrap_content"
+ android:layout_width="fill_parent"
+ android:background="#00000000">
+ <TableRow android:orientation="vertical" android:soundEffectsEnabled="true">
+   	 <TextView id="@+id/lowText"
+   	  android:text=" Low"
+   	  android:width="245px"
+   	  android:textColor="#ffffff"/>
+   	 <TextView id="@+id/highText"
+   	  android:gravity="right"
+   	  android:text="High"
+   	  android:textColor="#ffffff"/>
+</TableRow>
+</TableLayout>
 </LinearLayout>

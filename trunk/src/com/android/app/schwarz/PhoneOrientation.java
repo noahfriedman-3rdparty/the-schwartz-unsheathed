@@ -20,10 +20,7 @@ public class PhoneOrientation {
 	public static final int ORIENTATION_FACE_BACKWARD = 5;
 	// anything else will result in an invalid orientation
 	public static final int ORIENTATION_INVALID = 6;
-	
 	private float	mTolerance = 0.0f;
-	private int		mOrientation = ORIENTATION_INVALID;
-	private int		mLastOrientation = ORIENTATION_INVALID;
 	
 	public int getOrientation(float roll, float pitch) {
 		int orientation = ORIENTATION_INVALID;
@@ -59,9 +56,6 @@ public class PhoneOrientation {
 					orientation = ORIENTATION_FACE_DOWN;
 			}
 		}
-		if(orientation == ORIENTATION_INVALID)
-			orientation = mLastOrientation;
-		mLastOrientation = orientation;
 		
 		return orientation;
 	}

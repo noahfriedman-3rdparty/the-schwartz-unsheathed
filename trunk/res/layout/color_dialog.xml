@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_height="fill_parent"
+android:layout_width="fill_parent"
+android:background="#444460"
+android:orientation="vertical">
+<SeekBar
+android:id="@+id/redColor"
+android:layout_height="wrap_content"
+android:layout_width="fill_parent"
+android:background="#80FFFFFF"
+android:scrollbarAlwaysDrawHorizontalTrack="true" android:clickable="true" android:max="255" android:scrollbarStyle="outsideOverlay"/>
+<TextView
+android:id="@+id/redText"
+android:text="Red"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="14sp"
+android:textColor="#ff0000"/>
+<SeekBar
+android:id="@+id/greenColor"
+android:layout_height="wrap_content"
+android:layout_width="fill_parent"
+android:background="#80FFFFFF"
+android:scrollbarAlwaysDrawHorizontalTrack="true" android:clickable="true" android:max="255" android:scrollbarStyle="outsideOverlay"/>
+<TextView
+android:id="@+id/greenText"
+android:text="Green"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="14sp"
+android:textColor="#00ff00"/>
+<SeekBar
+android:id="@+id/blueColor"
+android:layout_height="wrap_content"
+android:layout_width="fill_parent"
+android:background="#80FFFFFF"
+android:scrollbarAlwaysDrawHorizontalTrack="true" android:clickable="true" android:max="255" android:scrollbarStyle="outsideOverlay"/>
+<TextView
+android:id="@+id/blueText"
+android:text="Blue"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:textSize="14sp"
+android:textColor="#0000ff"/>
+</LinearLayout>
