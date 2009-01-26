@@ -29,6 +29,8 @@ import android.os.Bundle;
 import android.view.*;
 import android.widget.SeekBar;
 import android.widget.Toast;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.hardware.SensorManager;
 
 public class TheSchwartz extends Activity {
@@ -37,7 +39,6 @@ public class TheSchwartz extends Activity {
 	private SensorManager mSensorManager = null;
 	private GraphView mGraphView;
 	private Menu mMenu;
-	private boolean mSensitive = false;
 	private boolean mFirstRun = true;
 
 	/** Called when the activity is first created. */
@@ -58,9 +59,13 @@ public class TheSchwartz extends Activity {
         boolean bgVisible = settings.getBoolean("bgVisible", true);
         mFirstRun = settings.getBoolean("firstRun", true);
         float sense = settings.getFloat("sensitivity", 5.0f);
+        int red = settings.getInt("redCustom", 255);
+        int green = settings.getInt("greenCustom", 255);
+        int blue = settings.getInt("blueCustom", 255);
         mGraphView.setSabreColor(color);
         mGraphView.setBgVisible(bgVisible);
         mGraphView.setSenseOffset(sense);
+        mGraphView.setCustomColor(red, green, blue);
     }
 
     @Override
@@ -84,6 +89,10 @@ public class TheSchwartz extends Activity {
     	editor.putBoolean("bgVisible", mGraphView.getBgVisible());
     	editor.putBoolean("firstRun", mFirstRun);
     	editor.putFloat("sensitivity", mGraphView.getSenseOffset());
+    	int color = mGraphView.getCustomColor();
+    	editor.putInt("redCustom", Color.red(color));
+    	editor.putInt("greenCustom", Color.green(color));
+    	editor.putInt("blueCustom", Color.blue(color));
     	// Don't forget to commit your edits!!!
     	editor.commit();
     	mGraphView.onStop();
@@ -108,6 +117,7 @@ public class TheSchwartz extends Activity {
 		mMenu.add(0, 0, 0, R.string.zoom_toggle);
 		mMenu.add(1, 1, 0, R.string.bg_toggle);
 		mMenu.add(2, 3, 2, "Sensitivity");
+		mMenu.add(2, 4, 2, "Custom Color");
 		return true;
 	}
 
@@ -130,7 +140,7 @@ public class TheSchwartz extends Activity {
 		case 3:
             LayoutInflater factory = LayoutInflater.from(this);
             final View dv = factory.inflate(R.layout.sensedialog, null);
-            float sensitivity = mGraphView.getSenseOffset();
+            float sensitivity = 15.0f - mGraphView.getSenseOffset();
             new AlertDialog.Builder(TheSchwartz.this)
                 .setTitle("Adjust Sensitivity")
                 .setIcon(R.drawable.icon)
@@ -140,7 +150,7 @@ public class TheSchwartz extends Activity {
     
                         /* User clicked OK so do some stuff */
                     	SeekBar sb = (SeekBar) dv.findViewById(R.id.sensitivity);
-                    	float sense = sb.getProgress();
+                    	float sense = 15 - sb.getProgress();
                     	mGraphView.setSenseOffset(sense);
                     	Toast.makeText(TheSchwartz.this, "Sensitivty set to "+(int)sense, Toast.LENGTH_SHORT);
                     }
@@ -154,6 +164,57 @@ public class TheSchwartz extends Activity {
                 .show();
             SeekBar sb = (SeekBar) dv.findViewById(R.id.sensitivity);
             sb.setProgress((int)sensitivity);
+            return true;
+		case 4:
+            factory = LayoutInflater.from(this);
+            final View v = factory.inflate(R.layout.color_dialog, null);
+            new AlertDialog.Builder(TheSchwartz.this)
+                .setTitle("Color Picker")
+                .setIcon(R.drawable.icon)
+                .setView(v)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+    
+                        /* User clicked OK so do some stuff */
+                    	SeekBar sb = (SeekBar) v.findViewById(R.id.redColor);
+                    	int red = sb.getProgress();
+                    	sb = (SeekBar) v.findViewById(R.id.greenColor);
+                    	int green = sb.getProgress();
+                    	sb = (SeekBar) v.findViewById(R.id.blueColor);
+                    	int blue = sb.getProgress();
+                    	
+                    	mGraphView.setCustomColor(red, green, blue);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        /* User clicked cancel so do some stuff */
+                    }
+                })
+                .create()
+                .show();
+            	
+            	int color = mGraphView.getCustomColor();
+            	
+            	SeekBar seekBar = (SeekBar) v.findViewById(R.id.redColor);
+            	GradientDrawable gd = new GradientDrawable(GradientDrawable.Orientation.BL_TR,
+    				new int[] { 0x00000000, 0xFFFF0000 });
+            	seekBar.setProgressDrawable(gd);
+            	seekBar.setProgress(Color.red(color));
+            
+            	seekBar = (SeekBar) v.findViewById(R.id.greenColor);
+            	gd = new GradientDrawable(GradientDrawable.Orientation.BL_TR,
+    				new int[] { 0x00000000, 0xFF00FF00 });
+            	seekBar.setProgressDrawable(gd);
+            	seekBar.setProgress(Color.green(color));
+
+            	seekBar = (SeekBar) v.findViewById(R.id.blueColor);
+            	gd = new GradientDrawable(GradientDrawable.Orientation.BL_TR,
+    				new int[] { 0x00000000, 0xFF0000FF });
+            	seekBar.setProgressDrawable(gd);
+            	seekBar.setProgress(Color.blue(color));
+            	
+            return true;
 		}
 		return false;
 	}

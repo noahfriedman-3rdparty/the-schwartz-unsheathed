@@ -24,17 +24,12 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.*;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.ListView;
-import android.widget.PopupWindow;
-import android.widget.Toast;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 
 import java.io.IOException;
 import java.util.Random;
@@ -59,7 +54,7 @@ public class GraphView extends View implements Runnable
 	
     public static final int SWING_DELAY = 500;
     public int HIT_DELAY = 250;
-    public static final int MAX_COLORS = 8;
+    public static final int MAX_COLORS = 9;
     public static final int NUM_SAMPLES = 2;
     public static final float ACCEL_THRESHOLD = 0.6f;
     public static final float SWING_FORCE = 15.0f;
@@ -103,7 +98,6 @@ public class GraphView extends View implements Runnable
     private SensorManager mSensorManager = null;
     private long lastTime = 0;
     private Context mContext;
-    private boolean mHitSounds = false;
     private boolean mZoom = false;
     private boolean mClash = false;
     private Vector<Float> mMagnitudes = new Vector<Float>();
@@ -112,12 +106,12 @@ public class GraphView extends View implements Runnable
     private boolean mBgVisible = true;
     private boolean mPlayHum = true;
     private boolean mSensitive = false;
-    private float 	mGravity[] = new float[] {0.0f, 0.0f};
     private WakeLock mWakeLock = null;
 //    private int mOrientation = PhoneOrientation.ORIENTATION_INVALID;
 //    private PhoneOrientation mPO = new PhoneOrientation();
     private boolean mKeepScreenOn = false;
     private float mSenseOffset = 5.0f;
+    private int mCustomColor[] = new int[] {255,255,255};
     
     public GraphView(Context context, SensorManager sm) {
         super(context);
@@ -456,6 +450,18 @@ public class GraphView extends View implements Runnable
     public float getSenseOffset() {
     	return mSenseOffset;
     }
+    
+    public void setCustomColor(int r, int g, int b) {
+    	mCustomColor[0] = r;
+    	mCustomColor[1] = g;
+    	mCustomColor[2] = b;
+    	
+    	mColorNum = 8;
+    }
+    
+    public int getCustomColor() {
+    	return Color.rgb(mCustomColor[0], mCustomColor[1], mCustomColor[2]);
+    }
 /*    
     private int updateAccelReadings(float magnitude) {
     	if(mMagnitudes.size() == NUM_SAMPLES)
@@ -621,6 +627,18 @@ public class GraphView extends View implements Runnable
         		background = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
         				new int[] { 0x00000000, 0xFF000000+(mGlowLevel<<16)+(mGlowLevel>>1), 0x00000000 });
         		break;
+        	case 8:
+        		int colors[] = new int[3];
+        		colors[0] = Color.argb(255, mCustomColor[0]/2, mCustomColor[1]/2, mCustomColor[2]/2);
+        		colors[1] = Color.argb(255, mCustomColor[0], mCustomColor[1], mCustomColor[2]);
+        		float percent = (float)mGlowLevel/255.0f;
+        		colors[2] = Color.argb(255, (int)((float)mCustomColor[0]*percent), (int)((float)mCustomColor[1]*percent), (int)((float)mCustomColor[2]*percent));
+        		blade = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+        				new int[] { colors[0], colors[1], colors[1], colors[0] });
+        		blade.setStroke(2, colors[1]);
+        		background = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+        				new int[] { 0x00000000, colors[2], 0x00000000 });
+        		break;
         	}
         	if(mSabreOut)
         	{
@@ -724,6 +742,21 @@ public class GraphView extends View implements Runnable
         				new int[] { 0x00000000, 0xFF000000+(mGlowLevel<<16)+(mGlowLevel>>1) });
         		back2 = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT,
         				new int[] { 0x00000000, 0xFF000000+(mGlowLevel<<16)+(mGlowLevel>>1) });
+        		break;
+        	case 8:
+        		int colors[] = new int[3];
+        		colors[0] = Color.argb(255, mCustomColor[0]/2, mCustomColor[1]/2, mCustomColor[2]/2);
+        		colors[1] = Color.argb(255, mCustomColor[0], mCustomColor[1], mCustomColor[2]);
+        		float percent = (float)mGlowLevel/255.0f;
+        		colors[2] = Color.argb(255, (int)((float)mCustomColor[0]*percent), (int)((float)mCustomColor[1]*percent), (int)((float)mCustomColor[2]*percent));
+        		
+        		blade = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+        				new int[] { colors[0], colors[1], colors[1], colors[0] });
+        		blade.setStroke(5, colors[1]);
+        		background = new GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+        				new int[] { 0x00000000, colors[2] });
+        		back2 = new GradientDrawable(GradientDrawable.Orientation.RIGHT_LEFT,
+        				new int[] { 0x00000000, colors[2] });
         		break;
         	}
     		
