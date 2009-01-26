@@ -62,8 +62,8 @@ public class GraphView extends View implements Runnable
     public static final int MAX_COLORS = 8;
     public static final int NUM_SAMPLES = 2;
     public static final float ACCEL_THRESHOLD = 0.6f;
-    public static final float SWING_FORCE = 10.0f;
-    public static final float HIT_FORCE = 13.0f;//SensorManager.GRAVITY_EARTH;
+    public static final float SWING_FORCE = 15.0f;
+    public static final float HIT_FORCE = 20.0f;//SensorManager.GRAVITY_EARTH;
     
     public static final int SND_SABROUT1 = 0;
     public static final int SND_SABROFF1 = 1;
@@ -114,9 +114,10 @@ public class GraphView extends View implements Runnable
     private boolean mSensitive = false;
     private float 	mGravity[] = new float[] {0.0f, 0.0f};
     private WakeLock mWakeLock = null;
-    private int mOrientation = PhoneOrientation.ORIENTATION_INVALID;
-    private PhoneOrientation mPO = new PhoneOrientation();
+//    private int mOrientation = PhoneOrientation.ORIENTATION_INVALID;
+//    private PhoneOrientation mPO = new PhoneOrientation();
     private boolean mKeepScreenOn = false;
+    private float mSenseOffset = 5.0f;
     
     public GraphView(Context context, SensorManager sm) {
         super(context);
@@ -228,7 +229,7 @@ public class GraphView extends View implements Runnable
     			this.setSabreOut(true);
 
     			int mask = 0;
-    			mask = SensorManager.SENSOR_ACCELEROMETER | SensorManager.SENSOR_ORIENTATION;
+    			mask = SensorManager.SENSOR_ACCELEROMETER;
 
     			mSensorManager.registerListener(mListener, mask, SensorManager.SENSOR_DELAY_FASTEST);
     			mForceActive = true;
@@ -281,53 +282,15 @@ public class GraphView extends View implements Runnable
  
     private final SensorListener mListener = new SensorListener() {
         public void onSensorChanged(int sensor, float[] values) {
-        	if(sensor == SensorManager.SENSOR_ORIENTATION) {
-//        		float roll = values[2] * PI_OVER_180;
-//        		float pitch = values[1] * PI_OVER_180;
-        		mOrientation = mPO.getOrientation(values[2], values[1]);
-//        		mGravity[0] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(roll));
-//        		mGravity[1] = -(float)(SensorManager.GRAVITY_EARTH * Math.sin(pitch));
-        	}
-        	else {
+        	if(sensor == SensorManager.SENSOR_ACCELEROMETER) {
         		long currTime = System.currentTimeMillis();
-//        		values[0] += mGravity[0];
-//        		values[1] += mGravity[1];
         		float magnitude = 0.0f;
-        		if(mOrientation == PhoneOrientation.ORIENTATION_FACE_UP || mOrientation == PhoneOrientation.ORIENTATION_FACE_DOWN)
-        			magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]);
-        		else if(mOrientation == PhoneOrientation.ORIENTATION_FACE_LEFT || mOrientation == PhoneOrientation.ORIENTATION_FACE_RIGHT)
-        			magnitude = (float)Math.sqrt(values[2]*values[2]+values[1]*values[1]);
-        		else if(mOrientation == PhoneOrientation.ORIENTATION_FACE_FORWARD || mOrientation == PhoneOrientation.ORIENTATION_FACE_BACKWARD)
-        			magnitude = (float)Math.sqrt(values[0]*values[0]+values[2]*values[2]);
-//        		Log.i(APP_NAME, deltaT + ": ["+values[0]+", "+values[1]+", "+values[2]+", "+magnitude+"]");
-//        		lastTime = currTime;
+    			magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]+values[2]*values[2]);
         		int movement = NO_MOVEMENT;
-        		if(mSensitive) {
-        			if(magnitude >= HIT_FORCE)
-        				movement = HIT_DETECTED;
-        			else if(magnitude >= SWING_FORCE)
-        				movement = SWING_DETECTED;
-        		} else {
-        			if(magnitude >= (HIT_FORCE+5.0))
-        				movement = HIT_DETECTED;
-        			else if(magnitude >= (SWING_FORCE+5.0))
-        				movement = SWING_DETECTED;
-        		}
-//        		int movement = updateAccelReadings(magnitude);
-//        		switch(movement) {
-//        		case SWING_DETECTED:
-//        			Log.i(APP_NAME, "Movement detected in samples.");
-//        			break;
-//        		case NO_MOVEMENT:
-//        			Log.i(APP_NAME, "No movement detected in samples.");
-//        			break;
-//        		case HIT_DETECTED:
-//        			Log.i(APP_NAME, "A hit was detected in samples!");
-//        			break;
-//        		case NO_CHANGE:
-//        			Log.i(APP_NAME, "Unable to determine movement or not in samples.");
-//        			break;
-//        		}
+       			if(magnitude >= (HIT_FORCE+mSenseOffset))
+       				movement = HIT_DETECTED;
+       			else if(magnitude >= (SWING_FORCE+mSenseOffset))
+       				movement = SWING_DETECTED;
 	
         		if(movement == HIT_DETECTED && (currTime - lastTime >= HIT_DELAY)) {
         			mClash = true;
@@ -375,28 +338,25 @@ public class GraphView extends View implements Runnable
         					// TODO Auto-generated catch block
         					e.printStackTrace();
         				}
-//        				if(HIT_DELAY <= 10) {
-        					mMP.release();
+       					mMP.release();
 
-        					Random rand = new Random();
-        					int i; 
-       						i = rand.nextInt(7);
-       						switch(i) {
-       						case 0 : mMP = MediaPlayer.create(mContext, R.raw.fastsabr); break;
-       						case 1 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg1); break;
-       						case 2 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg4); break;
-       						case 3 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg7); break;
-       						case 4 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg2); break;
-       						case 5 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg5); break;
-       						case 6 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg6); break;
-       						}
-       						mMP.start();
-       						mHumming = false;
-       						mGlowLevel = 0xFF;
-       						mGlowInc = -2;
-//        				}
+       					Random rand = new Random();
+       					int i; 
+   						i = rand.nextInt(7);
+   						switch(i) {
+  						case 0 : mMP = MediaPlayer.create(mContext, R.raw.fastsabr); break;
+   						case 1 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg1); break;
+   						case 2 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg4); break;
+   						case 3 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg7); break;
+   						case 4 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg2); break;
+   						case 5 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg5); break;
+   						case 6 : mMP = MediaPlayer.create(mContext, R.raw.sabrswg6); break;
+   						}
+   						mMP.start();
+  						mHumming = false;
+   						mGlowLevel = 0xFF;
+   						mGlowInc = -2;
    						lastTime = currTime;
-//   	      				HIT_DELAY = 10;
         			}
         		} else if(false == mHumming) {// && (currTime-lastTime > SWING_DELAY) ) {
         			if(false == mMP.isPlaying()) {
@@ -487,6 +447,14 @@ public class GraphView extends View implements Runnable
     
     public void toggleSensitivity() {
     	mSensitive = !mSensitive;
+    }
+    
+    public void setSenseOffset(float offset) {
+    	mSenseOffset = offset;
+    }
+    
+    public float getSenseOffset() {
+    	return mSenseOffset;
     }
 /*    
     private int updateAccelReadings(float magnitude) {
