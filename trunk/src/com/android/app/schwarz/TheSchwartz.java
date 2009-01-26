@@ -21,10 +21,13 @@
 package com.android.app.schwarz;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.view.*;
+import android.widget.SeekBar;
 import android.widget.Toast;
 import android.hardware.SensorManager;
 
@@ -53,11 +56,11 @@ public class TheSchwartz extends Activity {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         int color = settings.getInt("sabreColor", 0);
         boolean bgVisible = settings.getBoolean("bgVisible", true);
-        mSensitive = settings.getBoolean("sensitive", false);
         mFirstRun = settings.getBoolean("firstRun", true);
+        float sense = settings.getFloat("sensitivity", 5.0f);
         mGraphView.setSabreColor(color);
         mGraphView.setBgVisible(bgVisible);
-        mGraphView.setSensitivity(mSensitive);
+        mGraphView.setSenseOffset(sense);
     }
 
     @Override
@@ -79,8 +82,8 @@ public class TheSchwartz extends Activity {
     	SharedPreferences.Editor editor = settings.edit();
     	editor.putInt("sabreColor", mGraphView.getSabreColor());
     	editor.putBoolean("bgVisible", mGraphView.getBgVisible());
-    	editor.putBoolean("sensitive", mGraphView.getSensitivity());
     	editor.putBoolean("firstRun", mFirstRun);
+    	editor.putFloat("sensitivity", mGraphView.getSenseOffset());
     	// Don't forget to commit your edits!!!
     	editor.commit();
     	mGraphView.onStop();
@@ -104,11 +107,7 @@ public class TheSchwartz extends Activity {
 		mMenu = menu;
 		mMenu.add(0, 0, 0, R.string.zoom_toggle);
 		mMenu.add(1, 1, 0, R.string.bg_toggle);
-		if(false == mSensitive)
-			mMenu.add(1, 2, 1, R.string.high_sensitivity);
-		else
-			mMenu.add(1, 2, 1, R.string.low_sensitivity);
-//		menu.add(1, 2, 1, "Toggle Hum");
+		mMenu.add(2, 3, 2, "Sensitivity");
 		return true;
 	}
 
@@ -122,30 +121,39 @@ public class TheSchwartz extends Activity {
 		case 0:
 			if(false == mGraphView.getSabreOut()) {
 				Toast.makeText(this, R.string.sabre_out_warning, Toast.LENGTH_SHORT).show();
-//				new AlertDialog.Builder(this)
-//                .setMessage(R.string.sabre_out_warning)
-//                .show();
 			} else
 				mGraphView.toggleZoom();
 			return true;
 		case 1:
 			mGraphView.toggleBackground();
 			return true;
-		case 2:
-			mSensitive = !mSensitive;
-			mMenu.removeItem(2);
-			mGraphView.toggleSensitivity();
-			mSensitive = mGraphView.getSensitivity();
-			
-			if(false == mSensitive) {
-				mMenu.add(1, 2, 1, R.string.high_sensitivity);
-				Toast.makeText(this, R.string.low_active, Toast.LENGTH_SHORT).show();
-			}
-			else {
-				mMenu.add(1, 2, 1, R.string.low_sensitivity);
-				Toast.makeText(this, R.string.high_active, Toast.LENGTH_SHORT).show();
-			}
-			return true;
+		case 3:
+            LayoutInflater factory = LayoutInflater.from(this);
+            final View dv = factory.inflate(R.layout.sensedialog, null);
+            float sensitivity = mGraphView.getSenseOffset();
+            new AlertDialog.Builder(TheSchwartz.this)
+                .setTitle("Adjust Sensitivity")
+                .setIcon(R.drawable.icon)
+                .setView(dv)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+    
+                        /* User clicked OK so do some stuff */
+                    	SeekBar sb = (SeekBar) dv.findViewById(R.id.sensitivity);
+                    	float sense = sb.getProgress();
+                    	mGraphView.setSenseOffset(sense);
+                    	Toast.makeText(TheSchwartz.this, "Sensitivty set to "+(int)sense, Toast.LENGTH_SHORT);
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        /* User clicked cancel so do some stuff */
+                    }
+                })
+                .create()
+                .show();
+            SeekBar sb = (SeekBar) dv.findViewById(R.id.sensitivity);
+            sb.setProgress((int)sensitivity);
 		}
 		return false;
 	}
