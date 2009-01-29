@@ -40,6 +40,7 @@ public class TheSchwartz extends Activity {
 	private GraphView mGraphView;
 	private Menu mMenu;
 	private boolean mFirstRun = true;
+	private boolean mResumed = false;
 
 	/** Called when the activity is first created. */
     @Override
@@ -78,6 +79,20 @@ public class TheSchwartz extends Activity {
     	}
     }
 
+    @Override
+    protected void onPause() {
+    	mGraphView.onPause();
+    	super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	if(true == mResumed)
+    		mGraphView.onResume();
+    	mResumed = true;
+    }
+    
     @Override
     protected void onStop() {
     	super.onStop();

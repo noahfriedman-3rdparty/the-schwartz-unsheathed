@@ -57,8 +57,8 @@ public class GraphView extends View implements Runnable
     public static final int MAX_COLORS = 9;
     public static final int NUM_SAMPLES = 2;
     public static final float ACCEL_THRESHOLD = 0.6f;
-    public static final float SWING_FORCE = 15.0f;
-    public static final float HIT_FORCE = 20.0f;//SensorManager.GRAVITY_EARTH;
+    public static final float SWING_FORCE = 2.0f;
+    public static final float HIT_FORCE = 6.0f;//SensorManager.GRAVITY_EARTH;
     
     public static final int SND_SABROUT1 = 0;
     public static final int SND_SABROFF1 = 1;
@@ -112,6 +112,8 @@ public class GraphView extends View implements Runnable
     private boolean mKeepScreenOn = false;
     private float mSenseOffset = 5.0f;
     private int mCustomColor[] = new int[] {255,255,255};
+    private Thread mThread = null;
+    private boolean mPaused = false;
     
     public GraphView(Context context, SensorManager sm) {
         super(context);
@@ -124,11 +126,11 @@ public class GraphView extends View implements Runnable
         mSensorManager = (SensorManager)sm;
         final PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE); 
         this.mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "TheSchwartz");
-        mWakeLock.acquire();
+//        mWakeLock.acquire(1);
         mKeepScreenOn = this.getKeepScreenOn();
         this.setKeepScreenOn(true);
-        Thread thread = new Thread(this);
-        thread.start();
+        mThread = new Thread(this);
+        mThread.start();
     }
     
     @Override
@@ -270,24 +272,27 @@ public class GraphView extends View implements Runnable
     	// last unregister the sensor listener.
     	mSensorManager.unregisterListener(mListener);
     	
-    	mWakeLock.release();
+//    	mWakeLock.release();
     	this.setKeepScreenOn(mKeepScreenOn);
     }
  
     private final SensorListener mListener = new SensorListener() {
         public void onSensorChanged(int sensor, float[] values) {
-        	if(sensor == SensorManager.SENSOR_ACCELEROMETER) {
+        	if(!mPaused && sensor == SensorManager.SENSOR_ACCELEROMETER) {
         		long currTime = System.currentTimeMillis();
         		float magnitude = 0.0f;
     			magnitude = (float)Math.sqrt(values[0]*values[0]+values[1]*values[1]+values[2]*values[2]);
+    			magnitude = Math.abs(magnitude - SensorManager.GRAVITY_EARTH);
         		int movement = NO_MOVEMENT;
        			if(magnitude >= (HIT_FORCE+mSenseOffset))
        				movement = HIT_DETECTED;
        			else if(magnitude >= (SWING_FORCE+mSenseOffset))
        				movement = SWING_DETECTED;
 	
-        		if(movement == HIT_DETECTED && (currTime - lastTime >= HIT_DELAY)) {
+        		if(!mPaused && movement == HIT_DETECTED && (currTime - lastTime >= HIT_DELAY)) {
         			mClash = true;
+        			
+        			if(!mPaused) {
         			if(mMP.isPlaying() == true) {
        					mMP.stop();
        				}
@@ -313,13 +318,14 @@ public class GraphView extends View implements Runnable
        				}
     				
        				mMP.start();
+        			}
        				mHumming = false;
        				mGlowLevel = 0xFF;
        				mGlowInc = -2;
        				lastTime = currTime;
-        		} else if(movement == SWING_DETECTED && currTime-lastTime >= SWING_DELAY) {
+        		} else if(!mPaused && movement == SWING_DETECTED && currTime-lastTime >= SWING_DELAY) {
         			mClash = false;
-        			if(mMP.isPlaying() == false || mHumming == true) {
+        			if(!mPaused && (mMP.isPlaying() == false || mHumming == true)) {
         				if(mMP.isPlaying() == true) {
            					mMP.stop();
            				}
@@ -352,8 +358,8 @@ public class GraphView extends View implements Runnable
    						mGlowInc = -2;
    						lastTime = currTime;
         			}
-        		} else if(false == mHumming) {// && (currTime-lastTime > SWING_DELAY) ) {
-        			if(false == mMP.isPlaying()) {
+        		} else if(!mPaused && false == mHumming) {// && (currTime-lastTime > SWING_DELAY) ) {
+        			if(!mPaused && false == mMP.isPlaying()) {
         				try {
         					mMP.prepare();
         				} catch (IllegalStateException e) {
@@ -363,11 +369,13 @@ public class GraphView extends View implements Runnable
         					// TODO Auto-generated catch block
         					e.printStackTrace();
         				}
+        				if(!mPaused) {
         				mMP.release();
         				mMP = MediaPlayer.create(mContext, R.raw.sabrhum);
         				mMP.setLooping(true);
         				mMP.start();
         				mHumming = true;
+        				}
         			}
         		}
         	}
@@ -382,7 +390,8 @@ public class GraphView extends View implements Runnable
     // will notify the handler that it is time to update the game
     public void run() {
     	while(true) {
-   			handler.sendEmptyMessage(0);
+   			if(!mPaused)
+   				handler.sendEmptyMessage(0);
    			try {
 				// allow the thread to sleep a bit and allow other threads to run
    				// 17 milliseconds will allow for a frame rate of about 60 FPS.
@@ -397,6 +406,8 @@ public class GraphView extends View implements Runnable
     private Handler handler = new Handler() {
     	@Override
     	public void handleMessage(Message msg) {
+    		if(mPaused)
+    			return;
     		if(mSabreOut) {
     			if(mSabreHeight > 5)
     				mSabreHeight -= 15;
@@ -661,7 +672,8 @@ public class GraphView extends View implements Runnable
 //        		blade.setBounds(149, mSabreHeight, 170, 360); //used for ring hilt
         		blade.setBounds(149, mSabreHeight, 170, 330);
         		blade.setShape(GradientDrawable.LINEAR_GRADIENT);
-        		blade.setCornerRadius(5);
+    			blade.setCornerRadii(new float[] { 10.0f, 10.0f, 10.0f, 10.0f, 0.0f, 0.0f, 0.0f, 0.0f});
+//        		blade.setCornerRadius(5);
         		blade.draw(canvas);
         		
 //        		canvas.drawBitmap(mSabre, 106, 339, null); //used for ring hilt
@@ -778,5 +790,34 @@ public class GraphView extends View implements Runnable
 			canvas.drawRect(0, 0, mWidth, mHeight, mPaint);
 		}
     }
+   
+   public void onPause() {
+	   mPaused = true;
+       this.setKeepScreenOn(mKeepScreenOn);
+	   mSensorManager.unregisterListener(mListener);
+	   mThread.suspend();
+	   
+//	   long startTime = System.currentTimeMillis();
+//	   while(System.currentTimeMillis() - startTime <= 1000);
+//	   mMP.release();
+   }
+   
+   public void onResume() {
+	   mPaused = false;
+       this.setKeepScreenOn(true);
+	   mMP = new MediaPlayer();
+	   mMP = MediaPlayer.create(mContext, R.raw.sabrhum);
+	   mMP.setLooping(true);
+	   if(true == mSabreOut) {
+		   int mask = 0;
+		   mask = SensorManager.SENSOR_ACCELEROMETER;
+
+		   mSensorManager.registerListener(mListener, mask, SensorManager.SENSOR_DELAY_FASTEST);
+		   mMP.start();
+		   mHumming = true;
+	   }
+	   mThread.resume();
+//       mThread = new Thread(this);
+   }
 }
 
