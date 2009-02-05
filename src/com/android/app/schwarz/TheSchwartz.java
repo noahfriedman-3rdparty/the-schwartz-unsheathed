@@ -216,18 +216,96 @@ public class TheSchwartz extends Activity {
     				new int[] { 0x00000000, 0xFFFF0000 });
             	seekBar.setProgressDrawable(gd);
             	seekBar.setProgress(Color.red(color));
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+    				@Override
+    				public void onProgressChanged(SeekBar seekBar, int progress,
+    						boolean fromTouch) {
+    					// TODO Auto-generated method stub
+    					int color = mGraphView.getCustomColor();
+    					int red = seekBar.getProgress();
+    					int green = Color.green(color);
+                    	int blue = Color.blue(color);
+                    	mGraphView.setCustomColor(red, green, blue);
+    				}
+
+    				@Override
+    				public void onStartTrackingTouch(SeekBar seekBar) {
+    					// TODO Auto-generated method stub
+    					
+    				}
+
+    				@Override
+    				public void onStopTrackingTouch(SeekBar seekBar) {
+    					// TODO Auto-generated method stub
+    					
+    				}
+                	
+                });
             
             	seekBar = (SeekBar) v.findViewById(R.id.greenColor);
             	gd = new GradientDrawable(GradientDrawable.Orientation.BL_TR,
     				new int[] { 0x00000000, 0xFF00FF00 });
             	seekBar.setProgressDrawable(gd);
             	seekBar.setProgress(Color.green(color));
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+    				@Override
+    				public void onProgressChanged(SeekBar seekBar, int progress,
+    						boolean fromTouch) {
+    					// TODO Auto-generated method stub
+    					int color = mGraphView.getCustomColor();
+    					int red = Color.red(color);
+    					int green = seekBar.getProgress();
+                    	int blue = Color.blue(color);
+                    	mGraphView.setCustomColor(red, green, blue);
+    				}
+
+    				@Override
+    				public void onStartTrackingTouch(SeekBar seekBar) {
+    					// TODO Auto-generated method stub
+    					
+    				}
+
+    				@Override
+    				public void onStopTrackingTouch(SeekBar seekBar) {
+    					// TODO Auto-generated method stub
+    					
+    				}
+                	
+                });
 
             	seekBar = (SeekBar) v.findViewById(R.id.blueColor);
             	gd = new GradientDrawable(GradientDrawable.Orientation.BL_TR,
     				new int[] { 0x00000000, 0xFF0000FF });
             	seekBar.setProgressDrawable(gd);
             	seekBar.setProgress(Color.blue(color));
+                seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+    				@Override
+    				public void onProgressChanged(SeekBar seekBar, int progress,
+    						boolean fromTouch) {
+    					// TODO Auto-generated method stub
+    					int color = mGraphView.getCustomColor();
+    					int red = Color.red(color);
+    					int green = Color.green(color);
+                    	int blue = seekBar.getProgress();
+                    	mGraphView.setCustomColor(red, green, blue);
+    				}
+
+    				@Override
+    				public void onStartTrackingTouch(SeekBar seekBar) {
+    					// TODO Auto-generated method stub
+    					
+    				}
+
+    				@Override
+    				public void onStopTrackingTouch(SeekBar seekBar) {
+    					// TODO Auto-generated method stub
+    					
+    				}
+                	
+                });
             	
             return true;
 		}
