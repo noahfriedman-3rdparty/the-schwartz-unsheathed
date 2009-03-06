@@ -63,10 +63,12 @@ public class TheSchwartz extends Activity {
         int red = settings.getInt("redCustom", 255);
         int green = settings.getInt("greenCustom", 255);
         int blue = settings.getInt("blueCustom", 255);
+        float volume = settings.getFloat("musicVolume", 0.35f);
         mGraphView.setSabreColor(color);
         mGraphView.setBgVisible(bgVisible);
         mGraphView.setSenseOffset(sense);
         mGraphView.setCustomColor(red, green, blue);
+        mGraphView.setMusicVolume(volume);
     }
 
     @Override
@@ -104,6 +106,7 @@ public class TheSchwartz extends Activity {
     	editor.putBoolean("bgVisible", mGraphView.getBgVisible());
     	editor.putBoolean("firstRun", mFirstRun);
     	editor.putFloat("sensitivity", mGraphView.getSenseOffset());
+    	editor.putFloat("musicVolume", mGraphView.getMusicVolume());
     	int color = mGraphView.getCustomColor();
     	editor.putInt("redCustom", Color.red(color));
     	editor.putInt("greenCustom", Color.green(color));
@@ -133,6 +136,7 @@ public class TheSchwartz extends Activity {
 		mMenu.add(1, 1, 0, R.string.bg_toggle);
 		mMenu.add(2, 3, 2, "Sensitivity");
 		mMenu.add(2, 4, 2, "Custom Color");
+		mMenu.add(3, 5, 3, "Music Volume");
 		return true;
 	}
 
@@ -179,7 +183,30 @@ public class TheSchwartz extends Activity {
                 .show();
             SeekBar sb = (SeekBar) dv.findViewById(R.id.sensitivity);
             sb.setProgress((int)sensitivity);
-            return true;
+            sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+				@Override
+				public void onProgressChanged(SeekBar seekBar, int progress,
+						boolean fromTouch) {
+					// TODO Auto-generated method stub
+					float sensitivity = 15.0f - (float)seekBar.getProgress();
+                	mGraphView.setSenseOffset(sensitivity);
+				}
+
+				@Override
+				public void onStartTrackingTouch(SeekBar seekBar) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void onStopTrackingTouch(SeekBar seekBar) {
+					// TODO Auto-generated method stub
+					
+				}
+            	
+            });
+         return true;
 		case 4:
             factory = LayoutInflater.from(this);
             final View v = factory.inflate(R.layout.color_dialog, null);
@@ -308,6 +335,56 @@ public class TheSchwartz extends Activity {
                 });
             	
             return true;
+		case 5:
+            factory = LayoutInflater.from(this);
+            final View vv = factory.inflate(R.layout.sensedialog, null);
+            float level = mGraphView.getMusicVolume();
+            new AlertDialog.Builder(TheSchwartz.this)
+                .setTitle("Music Volume")
+                .setIcon(R.drawable.icon)
+                .setView(vv)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+    
+                        /* User clicked OK so do some stuff */
+                    	SeekBar sb = (SeekBar) vv.findViewById(R.id.sensitivity);
+                    	float level = (float)sb.getProgress()/100.0f;
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        /* User clicked cancel so do some stuff */
+                    }
+                })
+                .create()
+                .show();
+            sb = (SeekBar) vv.findViewById(R.id.sensitivity);
+            sb.setMax(100);
+            sb.setProgress((int)(level*100.0f));
+            sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+
+				@Override
+				public void onProgressChanged(SeekBar seekBar, int progress,
+						boolean fromTouch) {
+					// TODO Auto-generated method stub
+					float level = (float)seekBar.getProgress()/100.0f;
+                	mGraphView.setMusicVolume(level);
+				}
+
+				@Override
+				public void onStartTrackingTouch(SeekBar seekBar) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				@Override
+				public void onStopTrackingTouch(SeekBar seekBar) {
+					// TODO Auto-generated method stub
+					
+				}
+            	
+            });
+         return true;
 		}
 		return false;
 	}

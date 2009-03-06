@@ -93,6 +93,7 @@ public class GraphView extends View implements Runnable
     private int mGlowInc = 1;
     private int mSabreHeight = 320;
     private MediaPlayer mMP = new MediaPlayer();
+    private MediaPlayer mMusic = new MediaPlayer();
 	private boolean mForceActive = false;
 	private boolean mHumming = false;
     private SensorManager mSensorManager = null;
@@ -114,6 +115,8 @@ public class GraphView extends View implements Runnable
     private int mCustomColor[] = new int[] {255,255,255};
     private Thread mThread = null;
     private boolean mPaused = false;
+    private int mMusicPos = 0;
+    private float mMusicVolume = 0.35f;
     
     public GraphView(Context context, SensorManager sm) {
         super(context);
@@ -129,7 +132,13 @@ public class GraphView extends View implements Runnable
 //        mWakeLock.acquire(1);
         mKeepScreenOn = this.getKeepScreenOn();
         this.setKeepScreenOn(true);
-        mThread = new Thread(this);
+		mMusic = MediaPlayer.create(mContext, R.raw.theme2);
+		mMusic.setLooping(true);
+    	mMusic.setVolume(mMusicVolume, mMusicVolume);
+		mMusic.start();
+		mMusic.pause();
+
+		mThread = new Thread(this);
         mThread.start();
     }
     
@@ -193,6 +202,15 @@ public class GraphView extends View implements Runnable
     public boolean getSabreOut() {
     	return mSabreOut;
     }
+    
+    public void setMusicVolume(float v) {
+    	mMusicVolume = v;
+    	mMusic.setVolume(mMusicVolume, mMusicVolume);
+    }
+    
+    public float getMusicVolume() {
+    	return mMusicVolume;
+    }
 
     @Override
 	public boolean onTouchEvent(MotionEvent event) {
@@ -230,6 +248,7 @@ public class GraphView extends View implements Runnable
     			mSensorManager.registerListener(mListener, mask, SensorManager.SENSOR_DELAY_FASTEST);
     			mForceActive = true;
     			mHumming = false;
+    			mMusic.start();
     		} else {
     			mMP = MediaPlayer.create(mContext, R.raw.sabroff1);
     			mMP.start();
@@ -237,7 +256,8 @@ public class GraphView extends View implements Runnable
 
     			mSensorManager.unregisterListener(mListener);
     			mForceActive = false;
-	mHumming = false;
+    			mHumming = false;
+    			mMusic.pause();
     		}
     	} else if(true == mForceActive) {
     		mColorNum++;
@@ -252,7 +272,7 @@ public class GraphView extends View implements Runnable
     	// if there is any sound playing, stop it.
     	if(mMP.isPlaying() == true)
     		mMP.stop();
-
+    	
 		try {
 				mMP.prepare();
 		} catch (IllegalStateException e) {
@@ -263,8 +283,23 @@ public class GraphView extends View implements Runnable
 				e.printStackTrace();
 		}
     	
+    	// same with the music.
+    	if(mMusic.isPlaying() == true)
+    		mMusic.stop();
+    	
+		try {
+				mMusic.prepare();
+		} catch (IllegalStateException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+		}
+    	
     	// now release the media player
     	mMP.release();
+    	mMusic.release();
     	
     	// clear out the vector of magnitudes
     	mMagnitudes.clear();
@@ -312,9 +347,9 @@ public class GraphView extends View implements Runnable
       				case 0 : mMP = MediaPlayer.create(mContext, R.raw.hit01); break;
        				case 1 : mMP = MediaPlayer.create(mContext, R.raw.hit02); break;
        				case 2 : mMP = MediaPlayer.create(mContext, R.raw.hit03); break;
-       				case 3 : mMP = MediaPlayer.create(mContext, R.raw.hit04); break;
-       				case 4 : mMP = MediaPlayer.create(mContext, R.raw.hit05); break;
-       				case 5 : mMP = MediaPlayer.create(mContext, R.raw.hit06); break;
+//       				case 3 : mMP = MediaPlayer.create(mContext, R.raw.hit04); break;
+//       				case 4 : mMP = MediaPlayer.create(mContext, R.raw.hit05); break;
+//       				case 5 : mMP = MediaPlayer.create(mContext, R.raw.hit06); break;
        				}
     				
        				mMP.start();
@@ -473,106 +508,8 @@ public class GraphView extends View implements Runnable
     public int getCustomColor() {
     	return Color.rgb(mCustomColor[0], mCustomColor[1], mCustomColor[2]);
     }
-/*    
-    private int updateAccelReadings(float magnitude) {
-    	if(mMagnitudes.size() == NUM_SAMPLES)
-    		mMagnitudes.removeElementAt(0);
-    	
-    	mMagnitudes.add(mMagnitudes.size(), magnitude);
-    	
-    	if(mMagnitudes.size() < NUM_SAMPLES)
-    		return NO_CHANGE;
-    	
-    	boolean moved = false;
-    	boolean stopped = false;
-    	boolean hit = false;
-    	float diffThreshold = 2.00f;
-    	float diffHit = 8.0f;
-    	float diff = 0.0f;
-    	
-    	if(false == mSensitive) {
-    		diffThreshold *= 2.00f;
-    		diffHit *= 2.0f;
-    	}
-    	
-    	float oldestMag = (float)mMagnitudes.get(0);
-   		float newestMag = (float)mMagnitudes.get(NUM_SAMPLES-1);
-   		diff = Math.abs(newestMag-oldestMag);
-    		
-   		if(newestMag > oldestMag) {
-   			if(diff >= diffThreshold) 
-   				moved = true;
-   		} else if(oldestMag >= newestMag) {
-   			if(diff >= diffThreshold && diff <= diffHit)
-   				stopped = true;
-   			else if(diff > diffHit)
-   				hit = true;
-   		}
-
-    	if(moved) {
-    		return SWING_DETECTED;
-    	}
-    	else if(hit) {
-    		return HIT_DETECTED;
-    	}
-    	else if(stopped) {
-    		return NO_MOVEMENT;
-    	}
-
-    	return NO_MOVEMENT;
-    }
-*/    
-    private int updateAccelReadings(float magnitude) {
-    	float maxDeviation = 0.0f;
-    	if(mMagnitudes.size() == NUM_SAMPLES)
-    		mMagnitudes.removeElementAt(0);
-    	
-    	mMagnitudes.add(mMagnitudes.size(), magnitude);
-    	
-    	if(mMagnitudes.size() < NUM_SAMPLES)
-    		return NO_CHANGE;
-    	
-    	int moved = 0;
-    	int stopped = 0;
-    	int state = NO_CHANGE;
-		float threshold = ACCEL_THRESHOLD;
-		float hitForce = HIT_FORCE;
-
-		if(false == mSensitive) {
-			threshold *= 2.0f;
-			hitForce += hitForce/2.0f;
-		}
-
-		for(int i = 0; i < mMagnitudes.size(); i++) {
-    		float mag = mMagnitudes.get(i);
-    		float deviation = Math.abs(mag - SensorManager.GRAVITY_EARTH);
-    		if(deviation > maxDeviation)
-    			maxDeviation = deviation;
-    		
-    		if(mag < (SensorManager.GRAVITY_EARTH-threshold) || mag > (SensorManager.GRAVITY_EARTH+threshold))
-    			moved++;
-    		else
-    			stopped++;
-    	}
-    	
-    	if(moved == NUM_SAMPLES) {
-    		state = SWING_DETECTED;
-    		if(mMaxDeviation < maxDeviation)
-    			mMaxDeviation = maxDeviation;
-    	} else if(stopped == NUM_SAMPLES) {
-    		if(mMaxDeviation >= hitForce || mLastMove == SWING_DETECTED) {
-    			state = HIT_DETECTED;
-    		} else
-    			state = NO_MOVEMENT;
-    		
-    		mMaxDeviation = 0.0f;
-    	}
-
-    	mLastMove = state;
-    	return state;
-    }
-    
-   private void drawSabre(Canvas canvas, boolean zoomed) {
+   
+    private void drawSabre(Canvas canvas, boolean zoomed) {
         GradientDrawable background = null;
         GradientDrawable blade = null;
 
@@ -795,6 +732,7 @@ public class GraphView extends View implements Runnable
 	   mPaused = true;
        this.setKeepScreenOn(mKeepScreenOn);
 	   mSensorManager.unregisterListener(mListener);
+	   mMusicPos = mMusic.getCurrentPosition();
 	   mThread.suspend();
 	   
 //	   long startTime = System.currentTimeMillis();
@@ -808,6 +746,11 @@ public class GraphView extends View implements Runnable
 	   mMP = new MediaPlayer();
 	   mMP = MediaPlayer.create(mContext, R.raw.sabrhum);
 	   mMP.setLooping(true);
+	   mMusic = MediaPlayer.create(mContext, R.raw.theme2);
+	   mMusic.setLooping(true);
+	   mMusic.seekTo(mMusicPos);
+   	   mMusic.setVolume(mMusicVolume, mMusicVolume);
+	   mMusic.start();
 	   if(true == mSabreOut) {
 		   int mask = 0;
 		   mask = SensorManager.SENSOR_ACCELEROMETER;
@@ -815,9 +758,11 @@ public class GraphView extends View implements Runnable
 		   mSensorManager.registerListener(mListener, mask, SensorManager.SENSOR_DELAY_FASTEST);
 		   mMP.start();
 		   mHumming = true;
-	   }
+
+	   } else
+		   mMusic.pause();
+
 	   mThread.resume();
-//       mThread = new Thread(this);
    }
 }
 
