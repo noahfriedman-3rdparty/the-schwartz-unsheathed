@@ -17,11 +17,11 @@ android:scrollbarAlwaysDrawHorizontalTrack="true" android:clickable="true" andro
  android:layout_width="fill_parent"
  android:background="#00000000">
  <TableRow android:orientation="vertical" android:soundEffectsEnabled="true">
-   	 <TextView id="@+id/lowText"
+   	 <TextView android:id="@+id/lowText"
    	  android:text=" Low"
    	  android:width="245px"
    	  android:textColor="#ffffff"/>
-   	 <TextView id="@+id/highText"
+   	 <TextView android:id="@+id/highText"
    	  android:gravity="right"
    	  android:text="High"
    	  android:textColor="#ffffff"/>
